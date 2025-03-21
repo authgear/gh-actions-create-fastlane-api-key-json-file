@@ -1,0 +1,42 @@
+name: "Create fastlane API Key JSON file"
+description: "Implement https://docs.fastlane.tools/app-store-connect-api/#using-fastlane-api-key-json-file"
+inputs:
+  api_key_id:
+    description: "The API key ID"
+    required: true
+    default: "invalid"
+  api_key_issuer:
+    description: "The API key issuer. It is typically a UUID."
+    required: true
+    default: "invalid"
+  api_key_base64:
+    description: "base64 encoded key file in .p8 format"
+    required: true
+    default: "invalid"
+  output_path:
+    description: "The path to write the fastlane API Key JSON file"
+    required: true
+    default: "./build/fastlane-api-key.json"
+runs:
+  using: "composite"
+  steps:
+  - name: "Create fastlane API Key JSON file"
+    shell: bash
+    env:
+      API_KEY_ID: ${{ inputs.api_key_id }}
+      API_KEY_ISSUER: ${{ inputs.api_key_issuer }}
+      API_KEY_BASE64: ${{ inputs.api_key_base64 }}
+      OUTPUT_PATH: ${{ inputs.output_path }}
+    run: |
+      API_KEY_PATH=$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8
+      echo -n "$API_KEY_BASE64" | base64 --decode -o $API_KEY_PATH
+
+      OUTPUT_DIR="$(dirname "$OUTPUT_PATH")"
+      mkdir -p "$OUTPUT_DIR"
+
+      jq --slurp --raw-input > "$OUTPUT_PATH" \
+        --arg key_id "$API_KEY_ID" \
+        --arg issuer_id "$API_KEY_ISSUER" \
+        '{key_id: $$key_id, issuer_id: $$issuer_id, key: .}' \
+        "$API_KEY_PATH"
+      jq --raw-output '.key_id' "$API_KEY_PATH"

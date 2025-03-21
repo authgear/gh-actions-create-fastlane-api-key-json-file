@@ -28,8 +28,8 @@ runs:
       API_KEY_BASE64: ${{ inputs.api_key_base64 }}
       OUTPUT_PATH: ${{ inputs.output_path }}
     run: |
-      API_KEY_PATH=$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8
-      echo -n "$API_KEY_BASE64" | base64 --decode -o $API_KEY_PATH
+      API_KEY_PATH="$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+      echo -n "$API_KEY_BASE64" | base64 --decode -o "$API_KEY_PATH"
 
       OUTPUT_DIR="$(dirname "$OUTPUT_PATH")"
       mkdir -p "$OUTPUT_DIR"
@@ -39,4 +39,4 @@ runs:
         --arg issuer_id "$API_KEY_ISSUER" \
         '{key_id: $key_id, issuer_id: $issuer_id, key: .}' \
         "$API_KEY_PATH"
-      jq --raw-output '.key_id' "$API_KEY_PATH"
+      jq --raw-output '.key_id' "$OUTPUT_PATH"
